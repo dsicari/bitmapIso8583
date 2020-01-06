@@ -1,0 +1,27 @@
+ul{
+	padding:0px;
+	margin:0px;
+	font-family:Arial, Helvetica, sans-serif;
+    font-size:20px;
+    color:#FFF;
+    background:rgb(32, 107, 187);
+	list-style:none;
+    text-indent:15px;
+    line-height:28px;
+    width: 100%;
+    font-weight: bold; 
+}
+ul li{
+    font-weight: normal; 
+    font-size:15px;
+	background:#3f3f3f;
+	line-height:28px;
+    border-bottom:1px solid #333;
+}
+ul button{
+    font-weight: bold; 
+    font-size: 8px;
+    margin: 6.5px;
+    float: right;
+    z-index: 0;
+}

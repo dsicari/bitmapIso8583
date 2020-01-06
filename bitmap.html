@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Lista</title>
+    <link rel="stylesheet" type="text/css" href="iso8583.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script>
+
+        /* Opcao de mover ul */
+        $( function() {
+        $( ".sortable" ).sortable();
+        $( ".sortable" ).disableSelection();
+        } ); 
+
+        /* Esconder ul selecionada */
+        function esconderUl(x){
+            $("li", x.parentElement).toggle();
+            if(x.innerHTML == "hide"){
+                x.innerHTML = "show"; 
+            }
+            else{
+                x.innerHTML = "hide"; 
+            }
+        }
+
+    </script>
+</head>
+
+<body>
+    <select id="selectBitField" width="20"></select> 
+    <button name="btnAdicionarBitField" onclick="adicionarBitField(document.getElementById('selectBitField').selectedIndex)">Adicionar Bit Field</button>    
+    <button name="btnChecarNodesUl" onclick="checkNodesUl()">Checar lista Bit Field</button>
+    <button name="btnDownload" onclick="download(document.getElementById('mainUL').outerHTML, prompt('Nome arquivo'), 'txt')">Download</button>
+    <hr>
+    <ul id="mainUL" class="sortable"></ul>
+</body>
+
+    <script>
+        var isoBitField = [["000"],["001"],["002"],
+                           ["003", "M", "PAN Cartao", "ans 19", "Personal Account Number encriptado 3DES"], 
+                           ["004", "M", "Data Hora transacao", "n 14", "Data e hora transacao AAAAMMDDHHMMSS"],
+                           ["005", "M", "Data transacao", "n 8", "Data transacao AAAAMMDD"],
+                           ["006", "M", "Hora transacao", "n 6", "Hora transacao HHMMSS"]];
+        
+        //console.log(isoBitField);
+        //console.log(isoBitField[1]);
+        //console.log(isoBitField[1].length);
+
+        /*Captura bitlist para atualizar lista opcoes para insercao*/
+        var x = 0;
+        for(x=0; x<isoBitField.length; x++){
+            refreshBitFieldList(isoBitField[x][0] + " " + isoBitField[x][2]); 
+        }
+
+        /*Atualiza lista opcoes bitmap a serem inseridos*/
+        function refreshBitFieldList(txt){
+            select = document.getElementById("selectBitField");
+            option = document.createElement("option");
+            option.value = option.text = txt;
+            select.add(option);
+        }  
+
+        function adicionarBitField(bitfield){
+
+            /* Verifica se bit field ja foi adicionado */
+            var tamanho = document.querySelectorAll('ul')[0].querySelectorAll('ul').length; 
+            //console.log("tamanho nodelist="+tamanho);           
+            for(let y = 0; y < tamanho; y++){ 
+                //console.log("id nodelist["+y+"]="+document.querySelectorAll('ul')[0].querySelectorAll('ul')[y].id);
+                if(document.querySelectorAll('ul')[0].querySelectorAll('ul')[y].id.includes(bitfield)){
+                    alert("ERROR: bit field " + bitfield + " ja adicionado!");
+                    return;
+                }
+            }
+
+            /* Cria novo UL e adiciona caracteristicas do bitfield a ele */
+            var ul = document.createElement("ul");
+            var textul = document.createTextNode(isoBitField[bitfield][0] + " " + isoBitField[bitfield][2]); // Titulo UL, exemplo: "003 PAN Cartao"
+            ul.setAttribute("id", "bitfield"+isoBitField[bitfield][0]); //adiciona id
+            ul.setAttribute("class", "sortable"); //adiciona classe sortable para poder ser movido entre os demais ULs
+            ul.appendChild(textul);
+            //document.getElementsByTagName('body')[0].appendChild(ul); // insere ul no body
+            document.getElementById('mainUL').appendChild(ul); //insere UL no mainUL
+
+            /* Cria botao para deletar UL*/
+            var button = document.createElement("button");
+            button.setAttribute("id", "btnDeleteBitField"+isoBitField[bitfield][0]);
+            button.innerHTML = "delete";
+            button.setAttribute("onclick", "deleteBitField(this.parentElement)");
+            ul.appendChild(button);
+
+            /* Cria botao para inserir informacao */
+            var buttonInsert = document.createElement("button");
+            buttonInsert.setAttribute("id", "btnInsertInfoBitField"+isoBitField[bitfield][0]);
+            buttonInsert.innerHTML = "add";
+            var idUl = "bitfield"+isoBitField[bitfield][0];
+            console.log("IDUL="+idUl);
+            if (idUl == null){
+                console.log("IDUL=NULL");    
+            }
+            buttonInsert.setAttribute("onclick", "adicionarInfoBitField(prompt('Informacao a ser inserida'), \'"+idUl+"\')");
+            ul.appendChild(buttonInsert);
+
+            /* Cria botao para mostrar/esconder filhos do UL */
+            var buttonToggle = document.createElement("button");
+            buttonToggle.setAttribute("id", "btnToggleBitField"+isoBitField[bitfield][0]);
+            buttonToggle.innerHTML = "hide";
+            buttonToggle.setAttribute("onclick", 'esconderUl(this)');
+            ul.appendChild(buttonToggle);
+
+            /* Adiciona filhos ao UL = informacoes do bitfield*/
+            var i=0;
+            for(i=1; i<isoBitField[bitfield].length; i++){
+                //console.log(isoBitField[bitfield][i], "bitfield"+isoBitField[bitfield][0]);  
+                adicionarInfoBitField(isoBitField[bitfield][i], "bitfield"+isoBitField[bitfield][0]);                  
+            }
+        }
+
+        function adicionarInfoBitField(txt, ul){
+            console.log(txt, ul);
+            var li = document.createElement("li");
+            var textli = document.createTextNode(txt);
+            li.appendChild(textli);
+            document.getElementById(ul).appendChild(li);
+        }
+
+        function deleteBitField(ul){
+            console.log(ul);
+            // passou o elemento pai a ser deletado, portanto vai percorrer todos os filhos desse elemento
+            while (ul.firstChild){
+                ul.removeChild(ul.firstChild);
+            }
+            document.getElementById('mainUL').removeChild(ul);
+        }
+
+        function checkNodesUl(x){
+            var tamanho = document.querySelectorAll('ul')[0].querySelectorAll('ul').length; 
+            console.log("tamanho nodelist="+tamanho);           
+            for(let y = 0; y < tamanho; y++){ 
+                console.log("id nodelist["+y+"]="+document.querySelectorAll('ul')[0].querySelectorAll('ul')[y].id);
+            }   
+        }
+
+        // Function to download data to a file
+        function download(data, filename, type) {
+			filename = filename + ".txt";
+            var file = new Blob([data], {type: type});
+            if (window.navigator.msSaveOrOpenBlob) // IE10+
+                window.navigator.msSaveOrOpenBlob(file, filename);
+            else { // Others
+                var a = document.createElement("a"),
+                        url = URL.createObjectURL(file);
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(function() {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);  
+                }, 0); 
+            }
+        }
+
+    </script>
+</html>
